@@ -1,0 +1,2 @@
+RecursosProyecto/datasets_proyectos/emociones/icml_face_data.csv filter=lfs diff=lfs merge=lfs -text
+RecursosProyecto/datasets_proyectos/puntos_faciales/data.csv filter=lfs diff=lfs merge=lfs -text
