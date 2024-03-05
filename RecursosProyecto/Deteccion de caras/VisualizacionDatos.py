@@ -1,31 +1,30 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
-# Reemplaza 'tu_archivo.csv' con la ruta o nombre real de tu archivo CSV
-ruta_del_csv = '../datasets_proyectos/puntos_faciales/data.csv'
+# Lee el CSV
+df = pd.read_csv('../datasets_proyectos/puntos_faciales/data.csv')
 
-# Cargar el archivo CSV en un DataFrame
-dataframe = pd.read_csv(ruta_del_csv)
+# Itera sobre las filas del DataFrame
+for index, row in df.iterrows():
+    # Obtiene las coordenadas x e y del punto
+    x = row['left_eye_center_x']
+    y = row['left_eye_center_y']
 
-# Imprimir las primeras filas del DataFrame
-print(dataframe.head())
+    # Obtiene la representación de la imagen y la convierte en un array de valores
+    image_values = np.fromstring(row['Image'], sep=' ', dtype=int)
 
-# visualizar las imagenes
+    # Realiza el reshape de la imagen a 94x94
+    image_array = image_values.reshape(96, 96)  # Cambié 94 a 96 porque el reshape es de 96x96
 
-# Hacer reshape con del array de imagenes a 96x96
-imagenes = dataframe['Image'].apply(lambda x: np.fromstring(x, sep=' '))
-imagenes = np.vstack(imagenes)
-imagenes = imagenes.reshape(-1, 96, 96)  # Cambiar a 94x94
+    # Muestra la imagen
+    plt.imshow(image_array, cmap='gray')
 
-# Visualizar las imágenes
-num_imagenes_a_mostrar = 10  # Puedes ajustar este número según tus necesidades
+    # Agrega un punto rojo en las coordenadas
+    plt.scatter(x, y, color='red', marker='o')
 
-plt.figure(figsize=(10, 5))
-for i in range(num_imagenes_a_mostrar):
-    plt.subplot(1, num_imagenes_a_mostrar, i + 1)
-    plt.imshow(imagenes[i], cmap='gray')
-    plt.title(f'Imagen {i + 1}')
+    # Ajusta el aspecto de la imagen
     plt.axis('off')
 
-plt.show()
+    # Muestra la imagen con el punto rojo
+    plt.show()
