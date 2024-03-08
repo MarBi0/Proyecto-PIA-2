@@ -1,33 +1,54 @@
 import pandas as pd
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import matplotlib.pyplot as plt
 import cv2
+import random
+from scipy import ndimage
+import tensorflow_hub as hub
 
-emociones = pd.read_csv("datasets_proyectos/emociones/icml_face_data.csv", delimiter=",")
+emociones = pd.read_csv("RecursosProyecto/datasets_proyectos/emociones/icml_face_data.csv", delimiter=",")
 emociones.columns = emociones.columns.str.strip()
 
 emociones = emociones.iloc[1:21]
 emociones.pixels = emociones.pixels.apply(lambda x: np.array(x.split()).reshape(48,48).astype(float))/255
 
-print(emociones.pixels.iloc[0].ndim)
 
-print(emociones.iloc[0].pixels.shape)
+def transformation(x):
+    rotate_rand = random.randint(-30,30)
+    x = ndimage.rotate(x, rotate_rand, reshape = False)
 
-plt.imshow(emociones.iloc[0].pixels, cmap='gray')
-plt.show()
+    bright_rand = random.uniform(1.5, 2)
+    x = np.clip(x * bright_rand, 0.0, 255.0)
 
-emociones.pixels = emociones.pixels.apply(lambda x: (tf.image.decode_image(x, channels=2)))
-# train_datagen_augmented = ImageDataGenerator(rescale=1*2)
-#print(train_datagen_augmented)
+    return x
+
+emociones.pixels = emociones.pixels.apply(lambda x: cv2.resize(x, (96,96)))
+emociones_augmented = emociones.copy()
+
+for n in range(len(emociones_augmented.pixels)):
+    emociones_augmented.pixels.iloc[n] = transformation(emociones.pixels.iloc[n])
 
 
+result = pd.concat([emociones, emociones_augmented])
+
+# plt.imshow(result.iloc[10].pixels, cmap='gray')
+# plt.show()
+# plt.imshow(result.iloc[30].pixels, cmap='gray')
+# plt.show()
+
+resnet_url = "https://www.kaggle.com/models/tensorflow/resnet-50/frameworks/TensorFlow2/variations/feature-vector/versions/1"
+IMAGE_SHAPE = (96, 96)
+COUNT_UNIQUE_EMOTIONS = len(pd.unique(result.emotion))
+
+feature_extractor_layer = hub.KerasLayer(resnet_url,
+                                           trainable=False, # congela los patrones subyacentes
+                                           name='feature_extraction_layer',
+                                           input_shape=IMAGE_SHAPE+(1,)) # define la forma de la imagen de entrada
+
+model = tf.keras.Sequential([
+    feature_extractor_layer, # utiliza la capa de extracción de características como la base
+    tf.keras.layers.Dense(COUNT_UNIQUE_EMOTIONS, activation='softmax', name='output_layer') # crea nuestra propia capa de salida
+])
 
 
-# rotation_range = 20,
-# shear_range = 0.2,
-# zoom_range = 0.2,
-# width_shift_range = 0.2,
-# height_shift_range = 0.2,
-# horizontal_flip = True
