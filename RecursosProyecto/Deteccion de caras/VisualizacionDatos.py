@@ -186,4 +186,4 @@ mostrar_imagenes_con_puntos(df_resultado, num_images=4, point_size=5)
 df_resultado['Image'] = df_resultado['Image'].apply(normalize_image)
 
 # Guardar el DataFrame resultado en un archivo CSV
-df_resultado.to_csv('resultado_aumentado.csv', index=False)
+df_resultado.to_feather('resultado_aumentado.feather')
